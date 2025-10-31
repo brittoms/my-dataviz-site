@@ -3,65 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CSV Data Visualizer</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <title>Welcome — Clubhouse Automation Tools Developed by Kannan</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #e3f2fd;
+      color: #0d47a1;
       text-align: center;
+      padding: 40px;
     }
-    canvas {
-      max-width: 100%;
-      height: auto;
+    h1 {
+      color: #01579b;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 1.1em;
+      color: #0277bd;
+    }
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+    }
+    input[type="file"], input[type="text"] {
+      padding: 10px;
+      width: 80%;
+      margin: 10px 0;
+      border: 1px solid #90caf9;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #0277bd;
+    }
+    pre {
+      text-align: left;
+      background: #f0f8ff;
+      padding: 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      max-width: 90%;
+      margin: 20px auto;
+      color: #01579b;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
-  <h1>📈 CSV Data Visualizer</h1>
-  <input type="file" id="csvFile" accept=".csv" />
-  <br><br>
-  <canvas id="chart"></canvas>
+  <h1>🎧 Welcome — Clubhouse Automation Tools</h1>
+  <p>Developed by <b>Kannan</b></p>
+
+  <div class="card">
+    <h2>Profile Download — User Details</h2>
+    <p>Upload your <b>profile.json</b> file or paste your <b>auth token</b> below.</p>
+
+    <input type="file" id="jsonFile" accept=".json"><br>
+    <input type="text" id="tokenInput" placeholder="Or paste your Clubhouse Token here">
+    <br>
+    <button onclick="handleProfile()">📂 Load Profile</button>
+
+    <div id="output"></div>
+  </div>
 
   <script>
-    document.getElementById('csvFile').addEventListener('change', function (e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    async function handleProfile() {
+      const fileInput = document.getElementById('jsonFile');
+      const tokenInput = document.getElementById('tokenInput').value.trim();
+      const output = document.getElementById('output');
+      output.innerHTML = "<p>⏳ Processing...</p>";
 
-      Papa.parse(file, {
-        header: true,
-        dynamicTyping: true,
-        complete: function(results) {
-          const data = results.data;
-          const labels = data.map(row => row["Product"]);
-          const values = data.map(row => row["Sales"]);
+      try {
+        let token = null;
+        let user = null;
 
-          const ctx = document.getElementById('chart').getContext('2d');
-          new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: labels,
-              datasets: [{
-                label: 'Sales by Product',
-                data: values,
-                backgroundColor: 'rgba(255, 205, 86, 0.8)',
-                borderColor: '#333',
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              }
-            }
-          });
+        // If file uploaded
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const text = await file.text();
+          const json = JSON.parse(text);
+          token = json.token || null;
+          user = json.user?.name || null;
+        } 
+        // If token manually entered
+        else if (tokenInput) {
+          token = tokenInput;
         }
-      });
-    });
+
+        if (!token) {
+          output.innerHTML = "<p style='color:red;'>❌ Please upload a valid profile.json or enter a token.</p>";
+          return;
+        }
+
+        // (Sample simulated fetch — replace with real API call if backend added)
+        const mockProfile = {
+          user_id: 123456,
+          name: user || "Sample User",
+          username: "clubhouse_demo",
+          followers: 452,
+          following: 300,
+          created: "15-Oct-2021 13:40",
+          photo_url: "https://cdn-icons-png.flaticon.com/512/147/147144.png"
+        };
+
+        output.innerHTML = `
+          <h3>✅ Profile Details Loaded</h3>
+          <img src="${mockProfile.photo_url}" width="120" style="border-radius:50%; margin-top:10px;">
+          <pre>
+<b>User ID:</b> ${mockProfile.user_id}
+<b>Name:</b> ${mockProfile.name}
+<b>Username:</b> @${mockProfile.username}
+<b>Followers:</b> ${mockProfile.followers}
+<b>Following:</b> ${mockProfile.following}
+<b>Created:</b> ${mockProfile.created}
+          </pre>
+        `;
+      } catch (err) {
+        output.innerHTML = `<p style="color:red;">⚠️ Error reading file: ${err.message}</p>`;
+      }
+    }
   </script>
 </body>
 </html>
